@@ -1,9 +1,9 @@
 import { nanoid } from 'nanoid'
 import React from 'react'
 import XLSX from 'xlsx'
-import { useRecoilState, useSetRecoilState } from 'recoil'
+import { useRecoilState } from 'recoil'
 import { SORT_STATE } from '../../contant'
-import List from '../../List'
+import List from '../List'
 import { 
   StyledButton,
   StyledInput,
@@ -32,30 +32,43 @@ reader.onload = e =>{
 }
 
 const App = ()=>{
-  const [uploadValue, setUploadValue] = React.useState('讀取檔案')
+  const [arr, setDataArr] = useRecoilState(dataArr)
 
-  const [state, setSortState] = useRecoilState(sortState)
-  const setSortStateByIndex = e => {    // 根據select index 去決定排序方式
-    const {0: label_0, 1: label_1, 2: label_2, selectedIndex} = e.target.options
-    setSortState((selectedIndex === 0? label_0: selectedIndex === 1? label_1: label_2).label)
+  //#region 手動輸入
+  const [name, setName] = React.useState('')
+  const [count, setCount] = React.useState('')
+  const handleChange = ({target: {type, value}}) => {
+    if(type === 'number'){    // 個數
+      setCount(+value)
+    }else{                    // 名稱
+      setName(value)
+    }
   }
 
-  const [arr, setDataArr] = useRecoilState(dataArr)
-  const nameRef = React.useRef(), countRef = React.useRef()
+  // 新增項目
   const addNewItem = () => {
-    const {value: name} = nameRef.current, {value: count} = countRef.current
     if(!name || !count)
       return
 
     let index
     if((index = arr.findIndex(obj => obj.name === name)) > -1){           // 重複的品名，直接改變數量
-      setDataArr([...arr.slice(0, index === 0? 0: index), {name, count: +count}, ...arr.slice(index + 1, arr.length)])
+      setDataArr(arr.map((data, dataIdx) => dataIdx === index? {name, count}: data))
     }else{
-      setDataArr([...arr, {name, count: +count}])                         // 新的品項，新增
+      setDataArr([...arr, {name, count}])                         // 新的品項，新增
     }
   }
+  //#endregion 手動輸入
+
+  //#region 排序項目
+  const [state, setSortState] = useRecoilState(sortState)
+  const setSortStateByIndex = e => {    // 根據select index 去決定排序方式
+    const {0: label_0, 1: label_1, 2: label_2, selectedIndex} = e.target.options
+    setSortState((selectedIndex === 0? label_0: selectedIndex === 1? label_1: label_2).label)
+  }
+  //#endregion 排序項目
 
   //#region 處理 excel
+  const [uploadValue, setUploadValue] = React.useState('讀取檔案')
   const loadFile = (e) => {
     const [file] = e.target.files, {name} = file || {}
     if(!name)
@@ -87,8 +100,8 @@ const App = ()=>{
         </div>
 
         <div className="block">
-          <StyledInput ref={nameRef} placeholder="名稱"/>
-          <StyledInput ref={countRef} type="number" placeholder="數量"/>
+          <StyledInput placeholder="名稱" value={name} onChange={handleChange}/>
+          <StyledInput placeholder="數量" value={count} onChange={handleChange} type="number" />
           <StyledButton children="新增" onClick={addNewItem} />
         </div>
 

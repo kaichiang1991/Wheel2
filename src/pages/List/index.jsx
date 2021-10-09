@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { 
     StyledListContainer,
@@ -7,8 +7,10 @@ import {
 
 import {
     dataArr, sortedDataArr
-} from '../Recoil'
+} from '../../Recoil'
 import { nanoid } from 'nanoid'
+
+const fetchAPI = () => Math.random()
 
 const ListItem = (props) =>{
     const {name, count} = props
