@@ -12,6 +12,7 @@ import {
 } from './index.style'
 
 import { dataArr, sortState } from '../../Recoil'
+import { useHistory } from 'react-router'
 
 let allExcelResult = []
 const reader = new FileReader()
@@ -69,8 +70,8 @@ const App = ()=>{
 
   //#region 處理 excel
   const [uploadValue, setUploadValue] = React.useState('讀取檔案')
-  const loadFile = (e) => {
-    const [file] = e.target.files, {name} = file || {}
+  const loadFile = ({target: {files}}) => {
+    const [file] = files, {name} = file || {}
     if(!name)
       return
 
@@ -84,6 +85,13 @@ const App = ()=>{
     setDataArr(allExcelResult)
   }
   //#endregion 處理 excel
+
+  //#region 開始遊戲
+  const history = useHistory()
+  const jumpToGame = () => {
+    history.push('game')
+  }
+  //#endregion 開始遊戲
 
   return (
     <StyledWrapper>
@@ -116,7 +124,7 @@ const App = ()=>{
             }
           </select>
           <StyledButton children="重置" onClick={()=> setDataArr([])}/>
-          <StyledButton children="開始抽獎" />
+          <StyledButton children="開始抽獎" onClick={jumpToGame}/>
         </div>
       </div>
     </StyledWrapper>

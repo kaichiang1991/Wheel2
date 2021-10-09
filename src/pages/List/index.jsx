@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { 
     StyledListContainer,
@@ -10,8 +10,6 @@ import {
 } from '../../Recoil'
 import { nanoid } from 'nanoid'
 
-const fetchAPI = () => Math.random()
-
 const ListItem = (props) =>{
     const {name, count} = props
     const [arr, setDataArr] = useRecoilState(dataArr)
@@ -19,7 +17,7 @@ const ListItem = (props) =>{
     const adjustCount = flag =>{
         const index = arr.findIndex(obj => obj.name === name), obj = arr[index]
         const count = flag? obj.count + 1: obj.count - 1 > 0? obj.count - 1: 0
-        setDataArr([...arr.slice(0, index === 0? 0: index), {name, count}, ...arr.slice(index + 1, arr.length)])
+        setDataArr(arr.map((data , dataIdx) => dataIdx === index? {name, count}: data))
     }
 
     // 從清單中刪除項目
@@ -34,8 +32,8 @@ const ListItem = (props) =>{
         <StyledListItem>
             <td>{name}</td>
             <td>{count} 個</td>
-            <td><button children="+" onClick={adjustCount.bind(this, true)}/></td>
             <td><button children="-" onClick={adjustCount.bind(this, false)}/></td>
+            <td><button children="+" onClick={adjustCount.bind(this, true)}/></td>
             <td><button children="刪除" onClick={deleteItem}/></td>
         </StyledListItem>
     )
