@@ -1,15 +1,22 @@
-import { Stage, Graphics, render, useApp } from '@inlet/react-pixi'
-import React, { useEffect, useState } from 'react'
+import { Stage, Graphics } from '@inlet/react-pixi'
+import gsap from 'gsap'
+import { Power0 } from 'gsap/gsap-core'
+import { Power1 } from 'gsap/gsap-core'
+import React, { useEffect, useRef, useState } from 'react'
+import { useRecoilState } from 'recoil'
+import { dataArrState } from '../Recoil'
+import Wheel from './Wheel'
 
 const AppPIXI = props =>{
 
+    const {isRolling} = props
     const [app, setApp] = useState()
 
     const appConfig = {
         width: 600,
         height: 600,
         options: {
-            resolution: 1, autoDensity: false,
+            resolution: 1, autoDensity: false, transparent: true
         },
         onMount: e => {
             setApp(e)
@@ -17,7 +24,6 @@ const AppPIXI = props =>{
     }
     
     useEffect(()=>{
-        console.log('use effect', app)
         const resizeFn = () => {
             if(!app)
                 return
@@ -31,8 +37,40 @@ const AppPIXI = props =>{
 
         app && window.addEventListener('resize', resizeFn)
         resizeFn()
-        
+
+        return () =>{
+            // unmount 時移除事件
+            window.removeEventListener('resize', resizeFn)
+        }
+
     }, [app])
+
+    const wheelRef = useRef()
+    const startRolling = async () => {
+        const wheel = wheelRef.current
+        const config = {degree: 0}
+        let baseAngle = 0, remainAngle = 0
+
+        const timeline = gsap.timeline()
+        .to(config, {ease: Power1.easeOut, degree: -10})        // 往回拉
+        .to(config, {ease: Power0.easeNone, duration: 10, degree: 360 * 5})
+        .eventCallback('onUpdate', ()=>{
+            wheel.angle = config.degree + baseAngle
+            remainAngle = wheel.angle % 360
+            // this.setCurrentIndex(remainAngle)
+        })
+    }
+
+    useEffect(async ()=>{
+        if(!isRolling)
+            return
+
+        await startRolling()
+
+    }, [isRolling])
+
+    const [dataArr, setDataArr] = useRecoilState(dataArrState)
+    const [modDataArr] = useState(dataArr.map(data => ({...data, origCount: data.count})))
 
     return (
         <Stage {...appConfig}>
@@ -46,6 +84,8 @@ const AppPIXI = props =>{
                 .drawRect(500, 500, 100, 100)
                 .endFill()
             }}></Graphics>
+
+            <Wheel ref={wheelRef} dataArr={modDataArr} />
         </Stage>
     )
 }

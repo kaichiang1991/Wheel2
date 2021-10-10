@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRecoilValue } from 'recoil'
 import { 
     StyledGameWrapper, 
@@ -30,13 +30,21 @@ const Game = () => {
     const history = useHistory()
     useEffect(()=>{
         // 避免重新整理後沒資料，回到上一頁
-        // if(!title || !dataArr.length){
-        //     // history.goBack()
-        // }
-    }, [])
+        if(!title || !dataArr.length){
+            history.goBack()
+        }
+    }, [title])
 
     const canvasDivRef = React.useRef()
-    console.log('ref', canvasDivRef)
+
+    //#region 抽獎開始
+    const [isRolling, setIsRolling] = useState(false)
+    const handleClick = () => {
+        if(!isRolling)
+            setIsRolling(!isRolling)
+    }       
+    //#endregion 抽獎開始
+
     return (
         <StyledGameWrapper>
             <div className="middle">
@@ -44,7 +52,7 @@ const Game = () => {
             </div>
             <div className="game-div">
                 <div className="canvas-container" ref={canvasDivRef}>
-                    <AppPIXI parent={canvasDivRef}/>
+                    <AppPIXI parent={canvasDivRef} isRolling={isRolling}/>
                 </div>
                 <StyledListContainer>
                     {
@@ -53,8 +61,11 @@ const Game = () => {
                 </StyledListContainer>
             </div>
             <div className="ui-container">
-                <StyledGameButton className="start" children={'抽獎'}/>
-                <StyledGameButton className="export" children="導出至excel"/>
+                <StyledGameButton className="start" children={'抽獎'} onClick={handleClick}/>
+                <div className="export">
+                    <StyledGameButton children="回上一頁" onClick={()=> history.goBack()}/>
+                    <StyledGameButton children="導出至excel"/>
+                </div>
             </div>
         </StyledGameWrapper>
     )
