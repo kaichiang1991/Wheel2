@@ -11,6 +11,7 @@ import {
 } from '../../Recoil'
 import { useHistory } from 'react-router'
 import { nanoid } from 'nanoid'
+import AppPIXI from '../../pixiComponents/AppPIXI'
 
 const ListItem = props => {
     const {name, count} = props
@@ -29,18 +30,22 @@ const Game = () => {
     const history = useHistory()
     useEffect(()=>{
         // 避免重新整理後沒資料，回到上一頁
-        if(!title || !dataArr.length){
-            // history.goBack()
-        }
+        // if(!title || !dataArr.length){
+        //     // history.goBack()
+        // }
     }, [])
 
+    const canvasDivRef = React.useRef()
+    console.log('ref', canvasDivRef)
     return (
         <StyledGameWrapper>
             <div className="middle">
                 <h1>{title}</h1>
             </div>
             <div className="game-div">
-                <div className="canvas-container">111</div>
+                <div className="canvas-container" ref={canvasDivRef}>
+                    <AppPIXI parent={canvasDivRef}/>
+                </div>
                 <StyledListContainer>
                     {
                         dataArr.map(data => <ListItem key={nanoid()} {...data} />)
