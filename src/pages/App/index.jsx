@@ -11,7 +11,7 @@ import {
   StyledWrapper 
 } from './index.style'
 
-import { dataArr, sortState } from '../../Recoil'
+import { dataArrState, sortStatState, titleState } from '../../Recoil'
 import { useHistory } from 'react-router'
 
 let allExcelResult = []
@@ -33,7 +33,14 @@ reader.onload = e =>{
 }
 
 const App = ()=>{
-  const [arr, setDataArr] = useRecoilState(dataArr)
+  //#region Title
+  const [title, setTitle] = useRecoilState(titleState)
+  const handleTitleChange = ({target: {value}}) => {
+    setTitle(value)
+  }
+  //#endregion Title
+
+  const [dataArr, setDataArr] = useRecoilState(dataArrState)
 
   //#region 手動輸入
   const [name, setName] = React.useState('')
@@ -52,19 +59,19 @@ const App = ()=>{
       return
 
     let index
-    if((index = arr.findIndex(obj => obj.name === name)) > -1){           // 重複的品名，直接改變數量
-      setDataArr(arr.map((data, dataIdx) => dataIdx === index? {name, count}: data))
+    if((index = dataArr.findIndex(obj => obj.name === name)) > -1){           // 重複的品名，直接改變數量
+      setDataArr(dataArr.map((data, dataIdx) => dataIdx === index? {name, count}: data))
     }else{
-      setDataArr([...arr, {name, count}])                         // 新的品項，新增
+      setDataArr([...dataArr, {name, count}])                         // 新的品項，新增
     }
   }
   //#endregion 手動輸入
 
   //#region 排序項目
-  const [state, setSortState] = useRecoilState(sortState)
-  const setSortStateByIndex = e => {    // 根據select index 去決定排序方式
+  const [sortStat, setSortStat] = useRecoilState(sortStatState)
+  const setSortStatByIndex = e => {    // 根據select index 去決定排序方式
     const {0: label_0, 1: label_1, 2: label_2, selectedIndex} = e.target.options
-    setSortState((selectedIndex === 0? label_0: selectedIndex === 1? label_1: label_2).label)
+    setSortStat((selectedIndex === 0? label_0: selectedIndex === 1? label_1: label_2).label)
   }
   //#endregion 排序項目
 
@@ -89,6 +96,16 @@ const App = ()=>{
   //#region 開始遊戲
   const history = useHistory()
   const jumpToGame = () => {
+    if(!title){
+      alert('抽獎名稱未設定')
+      return
+    }
+
+    if(dataArr.length <= 0){
+      alert('沒有抽獎資料')
+      return
+    }
+
     history.push('game')
   }
   //#endregion 開始遊戲
@@ -98,7 +115,7 @@ const App = ()=>{
       <div className="middle">
         <h1>抽獎</h1>
         <div className="block">
-          <StyledInput placeholder='抽獎名稱' />
+          <StyledInput placeholder='抽獎名稱' value={title} onChange={handleTitleChange}/>
           <StyledButton children="讀取" />
         </div>
 
@@ -118,7 +135,7 @@ const App = ()=>{
         </div>
 
         <div className="block">
-          <select value={state} onChange={setSortStateByIndex}>
+          <select value={sortStat} onChange={setSortStatByIndex}>
             {
               Object.values(SORT_STATE).map(value => <option key={nanoid()} value={value} children={value} />)
             }

@@ -6,13 +6,13 @@ import {
 } from './index.style'
 
 import {
-    dataArr, sortedDataArr
+    dataArrState, sortedDataArr
 } from '../../Recoil'
 import { nanoid } from 'nanoid'
 
 const ListItem = (props) =>{
     const {name, count} = props
-    const [arr, setDataArr] = useRecoilState(dataArr)
+    const [arr, setDataArr] = useRecoilState(dataArrState)
     // 調整項目的數量
     const adjustCount = flag =>{
         const index = arr.findIndex(obj => obj.name === name), obj = arr[index]
@@ -41,7 +41,7 @@ const ListItem = (props) =>{
 
 const List = () => {
 
-    const [arr, setDataArr] = useRecoilState(dataArr)
+    const [arr, setDataArr] = useRecoilState(dataArrState)
     const sortedData = useRecoilValue(sortedDataArr)
 
     return (

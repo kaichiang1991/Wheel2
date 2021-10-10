@@ -1,30 +1,35 @@
 import { atom, selector } from "recoil";
-import { SORT_STATE } from "../contant";
+import { SORT_STATE as SORT_STAT } from "../contant";
 
-export const dataArr = atom({
+export const titleState = atom({
+    key: 'title',
+    default: ''
+})
+
+export const dataArrState = atom({
     key: 'dataArr',
     default: []
 })
 
-export const sortState = atom({
-    key: 'sortState',
-    default: SORT_STATE.NONE
+export const sortStatState = atom({
+    key: 'sortStat',
+    default: SORT_STAT.NONE
 })
 
 export const sortedDataArr = selector({
     key: 'sortedDataArr',
     get: ({get}) => {
-        const arr = get(dataArr)
-        const sort = get(sortState)
+        const arr = get(dataArrState)
+        const sort = get(sortStatState)
 
         switch(sort){
             default:
-            case SORT_STATE.NONE:
+            case SORT_STAT.NONE:
                 return arr.slice()
-            case SORT_STATE.COUNT_GREATER:
+            case SORT_STAT.COUNT_GREATER:
                 // 從大排到小
                 return arr.slice().sort((a, b) => b.count - a.count)
-            case SORT_STATE.COUNT_LESS:
+            case SORT_STAT.COUNT_LESS:
                 // 從小排到大
                 return arr.slice().sort((a, b) => a.count - b.count)
         }
