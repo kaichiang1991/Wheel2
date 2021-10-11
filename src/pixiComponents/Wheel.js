@@ -1,7 +1,6 @@
 import { PixiComponent } from "@inlet/react-pixi";
 import { Graphics } from "pixi.js-legacy";
 import * as PIXI from 'pixi.js-legacy'
-import { useState } from "react";
 
 const radius = 300, colorArr = [0x97CBFF, 0xC2FF68, 0xFF5809, 0xFFD306]
 const textStyle = new PIXI.TextStyle({
@@ -46,7 +45,7 @@ function getColorIndex(index, length){
 export default PixiComponent('Wheel', {
     create: ()=> new Graphics(),
     didMount: (instance, parent)=>{
-        instance.position.set(300, 300)
+        // instance.position.set(300, 300)
     },
     applyProps: (instance, oldP, newP) =>{
         const {dataArr} = newP

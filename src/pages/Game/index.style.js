@@ -65,4 +65,8 @@ export const StyledGameButton = styled.button`
     margin: 0 8px;
     padding: 4px 20px;
     box-shadow: black 4px 4px 4px;
+
+    &:active{
+        transform: translate(2px, 2px)
+    }
 `

@@ -29,11 +29,12 @@ const Game = () => {
 
     const history = useHistory()
     useEffect(()=>{
+        console.log('use effect check back')
         // 避免重新整理後沒資料，回到上一頁
         if(!title || !dataArr.length){
             history.goBack()
         }
-    }, [title])
+    }, [title, dataArr, history])
 
     const canvasDivRef = React.useRef()
 
@@ -52,7 +53,7 @@ const Game = () => {
             </div>
             <div className="game-div">
                 <div className="canvas-container" ref={canvasDivRef}>
-                    <AppPIXI parent={canvasDivRef} isRolling={isRolling}/>
+                    <AppPIXI parent={canvasDivRef} isRolling={isRolling} setIsRolling={setIsRolling}/>
                 </div>
                 <StyledListContainer>
                     {

@@ -3,12 +3,30 @@ import { SORT_STATE as SORT_STAT } from "../contant";
 
 export const titleState = atom({
     key: 'title',
-    default: ''
+    default: 'AAA'  // ToDo 測試
 })
 
 export const dataArrState = atom({
     key: 'dataArr',
-    default: []
+    default: [      // ToDo 測試
+        {
+            name: '項目1',
+            count: 3
+        },
+        {
+            name: '項目2',
+            count: 3
+        },
+        {
+            name: '項目3',
+            count: 3
+        },
+        {
+            name: '項目4',
+            count: 3
+        },
+    ]
+    // default: []
 })
 
 export const sortStatState = atom({
