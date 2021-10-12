@@ -3,7 +3,7 @@ import { SORT_STATE as SORT_STAT } from "../contant";
 
 export const titleState = atom({
     key: 'title',
-    default: 'AAA'  // ToDo 測試
+    default: 'aaa'  // ToDo 測試
 })
 
 export const dataArrState = atom({

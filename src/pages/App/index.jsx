@@ -14,7 +14,8 @@ import {
 import { dataArrState, sortStatState, titleState } from '../../Recoil'
 import { useHistory } from 'react-router'
 import {
-  useServerData
+  useServerData,
+  useSetServerData
 } from '../../dataAccess'
 
 let allExcelResult = []
@@ -31,7 +32,7 @@ reader.onload = e =>{
           break
 
       const nameIdx = data[0].findIndex(obj => obj === '品項'), countIdx = data[0].findIndex(obj => obj === '數量')
-      allExcelResult.push(...data.slice(1).map(data => ({name: data[nameIdx], count: +data[countIdx]})))
+      allExcelResult.push(...data.slice(1).map(data => ({name: data[nameIdx], count: +data[countIdx], origCount: +data[countIdx]})))
   }
 }
 
@@ -106,19 +107,36 @@ const App = ()=>{
 
   //#region 開始遊戲
   const history = useHistory()
-  const jumpToGame = () => {
+  const [startGame, setStartGame] = useState(false)
+  const [sendDataArr, setSendDataArr] = useState(null)    // 要送給 server 的資料
+  useSetServerData(title, sendDataArr)
+
+  useEffect(() => {
+    console.log('use Efx', startGame, dataArr)
+    if(!startGame)
+      return
+    
     if(!title){
       alert('抽獎名稱未設定')
+      setStartGame(false)
       return
     }
 
     if(dataArr.length <= 0){
       alert('沒有抽獎資料')
+      setStartGame(false)
       return
     }
 
-    history.push('game')
-  }
+    setSendDataArr(dataArr)
+  }, [startGame, title, dataArr])
+
+  useEffect(() => {
+    if(!sendDataArr)
+      return
+    history.push('game')      // 跳轉遊戲畫面
+  }, [history, sendDataArr])
+  
   //#endregion 開始遊戲
 
   return (
@@ -152,7 +170,7 @@ const App = ()=>{
             }
           </select>
           <StyledButton children="重置" onClick={()=> setDataArr([])}/>
-          <StyledButton children="開始抽獎" onClick={jumpToGame}/>
+          <StyledButton children="開始抽獎" onClick={()=> setStartGame(true)}/>
         </div>
       </div>
     </StyledWrapper>

@@ -25,13 +25,33 @@ export const useServerData = (title) => {
 }
 
 /**
+ * 設定資料庫資料
+ * @param {*} title 表格名稱
+ * @param {*} dataArr 資料陣列
+ */
+export const useSetServerData = (title, dataArr) => {
+    useEffect(() => {
+        if(!title || !dataArr?.length)
+            return
+
+        fetchData(`/wheel/${title}`, 'POST', {dataArr})
+    }, [title, dataArr])
+}
+
+export const fetchGameResult = async (title) => {
+    console.log('fetch: dataArr')
+    const result = await fetchData(`/wheel/${title}/result`)
+    console.log('result', result)
+}
+
+/**
  * 取得 server 資料
  * @param {*} url api 位址
  * @param {*} [method='GET'] http method
  * @param {*} data 要傳送的資料
  * @returns 收到的資料
  */
-async function fetchData(url, method = 'GET', data){
+export async function fetchData(url, method = 'GET', data){
     let res
     try{
         res = await axios({

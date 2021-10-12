@@ -3,10 +3,11 @@ import gsap from 'gsap'
 import { Elastic, Power0 } from 'gsap/gsap-core'
 import { Power1 } from 'gsap/gsap-core'
 import React, { useEffect, useRef, useState } from 'react'
-import { useRecoilState } from 'recoil'
-import { dataArrState } from '../Recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
+import { dataArrState, titleState } from '../Recoil'
 import Wheel from './Wheel'
 import Arrow from './Arrow'
+import { fetchGameResult } from '../dataAccess'
 
 const wheelConfig = {
     duration: 1,           // 數字越小，轉盤越快
@@ -53,6 +54,8 @@ const AppPIXI = props =>{
 
     }, [app, props.parent])
 
+    const title = useRecoilValue(titleState)
+    const [dataArr, setDataArr] = useRecoilState(dataArrState)
     const wheelRef = useRef(), arrowRef = useRef()
 
     // 監聽是否開始轉動
@@ -78,6 +81,9 @@ const AppPIXI = props =>{
                 calcCurrentIndex(remainAngle)
             })
     
+            
+            fetchGameResult(title)
+
             // ToDo 先計時停止
             setTimeout(() => {
                 const repeatTween = timeline.getChildren()[1]
@@ -143,6 +149,7 @@ const AppPIXI = props =>{
             return gsap.utils.random(bottom, top, 1) 
         }
         
+        // 滾動的流程
         const rollingProcess = async ()=>{
 
             //#region 設定監聽
@@ -164,12 +171,10 @@ const AppPIXI = props =>{
             await startRolling()
         }
 
-        
         rollingProcess()
 
-    }, [isRolling])
+    }, [isRolling, setIsRolling])
 
-    const [dataArr, setDataArr] = useRecoilState(dataArrState)
     const [modDataArr] = useState(dataArr.map(data => ({...data, origCount: data.count})))
 
     return (
@@ -186,7 +191,7 @@ const AppPIXI = props =>{
             }}></Graphics>
 
             <Container position={[0, 300]}>
-                <Wheel ref={wheelRef} dataArr={modDataArr} />
+                <Wheel ref={wheelRef} dataArr={dataArr} />
                 <Arrow ref={arrowRef} />
             </Container>
 

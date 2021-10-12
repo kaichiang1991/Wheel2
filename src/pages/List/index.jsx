@@ -12,18 +12,18 @@ import { nanoid } from 'nanoid'
 
 const ListItem = (props) =>{
     const {name, count} = props
-    const [arr, setDataArr] = useRecoilState(dataArrState)
+    const [dataArr, setDataArr] = useRecoilState(dataArrState)
     // 調整項目的數量
     const adjustCount = flag =>{
-        const index = arr.findIndex(obj => obj.name === name), obj = arr[index]
+        const index = dataArr.findIndex(obj => obj.name === name), obj = dataArr[index]
         const count = flag? obj.count + 1: obj.count - 1 > 0? obj.count - 1: 0
-        setDataArr(arr.map((data , dataIdx) => dataIdx === index? {name, count}: data))
+        setDataArr(dataArr.map((data , dataIdx) => dataIdx === index? {name, count, origCount: count}: data))
     }
 
     // 從清單中刪除項目
     const deleteItem = () => {
-        const index = arr.findIndex(obj => obj.name === name)
-        const copyArr = arr.slice()
+        const index = dataArr.findIndex(obj => obj.name === name)
+        const copyArr = dataArr.slice()
         copyArr.splice(index, 1)
         setDataArr(copyArr)
     }
@@ -47,7 +47,7 @@ const List = () => {
     return (
         <StyledListContainer>
             <table>
-                <thead onClick={()=> setDataArr([...arr, {name: 'aa', count: 10}, {name: 'bb', count: 5}])}>
+                <thead onClick={()=> setDataArr([...arr, {name: 'aa', count: 10, origCount: 10}, {name: 'bb', count: 5,  origCount: 5}])}>
                     <tr>
                         <th colSpan="5"><h2>品項清單</h2></th>
                     </tr>
