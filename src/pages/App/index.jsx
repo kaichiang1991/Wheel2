@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import XLSX from 'xlsx'
 import { useRecoilState } from 'recoil'
 import { SORT_STATE } from '../../contant'
@@ -13,6 +13,9 @@ import {
 
 import { dataArrState, sortStatState, titleState } from '../../Recoil'
 import { useHistory } from 'react-router'
+import {
+  useServerData
+} from '../../dataAccess'
 
 let allExcelResult = []
 const reader = new FileReader()
@@ -33,14 +36,22 @@ reader.onload = e =>{
 }
 
 const App = ()=>{
-  //#region Title
-  const [title, setTitle] = useRecoilState(titleState)
-  const handleTitleChange = ({target: {value}}) => {
-    setTitle(value)
-  }
-  //#endregion Title
 
   const [dataArr, setDataArr] = useRecoilState(dataArrState)
+
+  //#region Title
+  const [title, setTitle] = useRecoilState(titleState)
+  const handleTitleChange = ({target: {value}}) => setTitle(value)  // 更改 title input
+
+  const [sendTitle, setSendTitle] = useState('')          // 確認要送出的資料
+  const serverData = useServerData(sendTitle)
+  const handleClickLoadData = () => setSendTitle(title)   // 更改要送出的 title 名稱
+
+  // 讀取後設定 data
+  useEffect(()=>{
+    setDataArr(serverData || [])
+  }, [setDataArr, serverData])
+  //#endregion Title
 
   //#region 手動輸入
   const [name, setName] = React.useState('')
@@ -116,7 +127,7 @@ const App = ()=>{
         <h1>抽獎</h1>
         <div className="block">
           <StyledInput placeholder='抽獎名稱' value={title} onChange={handleTitleChange}/>
-          <StyledButton children="讀取" />
+          <StyledButton children="讀取" onClick={handleClickLoadData}/>
         </div>
 
         <div className="block">

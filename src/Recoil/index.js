@@ -8,25 +8,7 @@ export const titleState = atom({
 
 export const dataArrState = atom({
     key: 'dataArr',
-    default: [      // ToDo 測試
-        {
-            name: '項目1',
-            count: 3
-        },
-        {
-            name: '項目2',
-            count: 3
-        },
-        {
-            name: '項目3',
-            count: 3
-        },
-        {
-            name: '項目4',
-            count: 3
-        },
-    ]
-    // default: []
+    default: []
 })
 
 export const sortStatState = atom({
