@@ -1,16 +1,17 @@
-import { Stage, Graphics, Container } from '@inlet/react-pixi'
+import { Stage, Container, Text } from '@inlet/react-pixi'
 import gsap from 'gsap'
 import { Elastic, Power0 } from 'gsap/gsap-core'
 import { Power1 } from 'gsap/gsap-core'
 import React, { useEffect, useRef, useState } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
-import { dataArrState, titleState } from '../Recoil'
+import { dataArrState, rollingTimelineState, titleState } from '../Recoil'
 import Wheel from './Wheel'
 import Arrow from './Arrow'
-import { fetchGameResult } from '../dataAccess'
+import { fetchGameResult, updateResult } from '../dataAccess'
 
 const wheelConfig = {
-    duration: 1,           // 數字越小，轉盤越快
+    duration: 1,            // 數字越小，轉盤越快
+    leastDur: 1000,         // 最少轉動時間 (ms)
 }
 const boundEvent = 'boundEvent'     // 邊界事件的名稱
 let currentIndex = 0
@@ -56,62 +57,80 @@ const AppPIXI = props =>{
 
     const title = useRecoilValue(titleState)
     const [dataArr, setDataArr] = useRecoilState(dataArrState)
-    const wheelRef = useRef(), arrowRef = useRef()
+    const [rollingTimeline, setRollingTimeline] = useRecoilState(rollingTimelineState)
+
+    const [showResult, setShowResult] = useState('')
+    const wheelRef = useRef(), arrowRef = useRef(), textRef = useRef()
 
     // 監聽是否開始轉動
     useEffect(()=>{
         if(!isRolling)
             return
 
+        /** 開始轉動 */
         const startRolling = async () => {
-            const wheel = wheelRef.current
-            const config = {degree: 0}
-            const {duration} = wheelConfig
-            let baseAngle = wheel.angle % 360, remainAngle = 0
-    
-            const timeline = gsap.timeline()
-            .to(config, {ease: Power1.easeOut, degree: -10})        // 往回拉
-            .to(config, {ease: Power0.easeNone, repeat: -1, duration, degree: 360, onComplete: () => {
-                timeline.kill()
-                playResult()
-            }})
-            .eventCallback('onUpdate', ()=>{
-                wheel.angle = config.degree + baseAngle
-                remainAngle = wheel.angle % 360
-                calcCurrentIndex(remainAngle)
-            })
-    
-            
-            fetchGameResult(title)
+            return new Promise(async res =>{
 
-            // ToDo 先計時停止
-            setTimeout(() => {
+                const wheel = wheelRef.current
+                const config = {degree: 0}
+                const {duration} = wheelConfig
+                let baseAngle = wheel.angle % 360, remainAngle = 0
+                let result
+                
+                const timeline = gsap.timeline()
+                .to(config, {ease: Power1.easeOut, degree: -10})        // 往回拉
+                .to(config, {ease: Power0.easeNone, repeat: -1, duration, degree: 360, onComplete: () => {
+                    timeline.kill()
+                    playResult(result, res)
+                }})
+                .eventCallback('onUpdate', ()=>{
+                    wheel.angle = config.degree + baseAngle
+                    remainAngle = wheel.angle % 360
+                    calcCurrentIndex(remainAngle)
+                })
+                setRollingTimeline(timeline)
+                
+                // 獲取結果
+                const [_result] = await Promise.all([
+                    fetchGameResult(title),
+                    new Promise(res => setTimeout(res, wheelConfig.leastDur))
+                ])
+                result = _result
+                
+                // 通知停止
                 const repeatTween = timeline.getChildren()[1]
                 const repeatTimes = Math.ceil(repeatTween.totalTime() / repeatTween.duration())
                 repeatTween.repeat(repeatTimes)
-            }, 100);
+            })
         }
     
-        const playResult = async () => {
+        /** 播放結果 */
+        const playResult = async (result, endFn) => {
             const wheel = wheelRef.current
-            console.log('play result', wheel.angle)
     
             let remainAngle = 0, baseAngle = wheel.angle % 360
-            const item = getResult(), result = getResultAngle(item), config = {degree: 0}, target = result <= baseAngle? (result + 360): result
+            const resultAngle = getResultAngle(result), config = {degree: 0}, target = resultAngle <= baseAngle? (resultAngle + 360): resultAngle
     
-            console.log('item', item, ' result', result)
-            // request server
-            // requestServer('/api/update', 'POST', {title: this.state.title, name: item})
-            
-            gsap.to(config, {ease: 'none', duration: target / 360 * wheelConfig.duration, degree: target - baseAngle})
+            gsap.to(config, {ease: Power0.easeNone, duration: target / 360 * wheelConfig.duration, degree: target - baseAngle})
             .eventCallback('onUpdate', ()=>{
                 wheel.angle = config.degree + baseAngle
                 remainAngle = wheel.angle % 360
                 calcCurrentIndex(remainAngle)
             })
-            .eventCallback('onComplete', ()=>{
-                console.log(`%ccomplete`, 'color:red', wheel.angle)
-                setIsRolling(false)
+            .eventCallback('onComplete', async ()=>{
+                await updateResult(title, result)       // 更新 database
+                await playShowResultEffect()            // 強調結果
+                setDataArr(dataArr.map(data => data.name === result? {...data, count: data.count - 1}: data))
+                endFn()
+            })
+        }
+
+        /** 播放結果的文字演出 */
+        const playShowResultEffect = async () => {
+            return new Promise(res =>{
+                const text = textRef.current
+                gsap.to(text.scale, {yoyo: true, repeat: 3, duration: .3, x: 1.2, y: 1.2})
+                .eventCallback('onComplete', res)
             })
         }
 
@@ -120,37 +139,32 @@ const AppPIXI = props =>{
          * @param {*} angle 角度 degree
          */
         const calcCurrentIndex = (angle)=>{
-            const totalCount = modDataArr.reduce((pre, curr) => pre + curr.origCount, 0)
+            const totalCount = dataArr.reduce((pre, curr) => pre + curr.origCount, 0)
             const clockwiseAngle = 360 - angle
-            const key = modDataArr.findIndex((_, idx) => clockwiseAngle <= modDataArr.slice(0, idx + 1).reduce((pre, curr) => pre + (curr.origCount / totalCount * 360), 0))
+            const key = dataArr.findIndex((_, idx) => clockwiseAngle <= dataArr.slice(0, idx + 1).reduce((pre, curr) => pre + (curr.origCount / totalCount * 360), 0))
 
             if(key !== currentIndex){
                 wheelRef.current.emit(boundEvent, key)     // 通知換邊界了
             }
         }
         
-        /** 取得結果 */
-        const getResult = ()=>{
-            const totalCount = modDataArr.reduce((pre, curr) => pre + curr.count, 0)
-            const index = gsap.utils.random(1, totalCount, 1) - 1
-            , key = modDataArr.findIndex((_, idx) => modDataArr[idx].count > 0 && index < modDataArr.slice(0, idx + 1).reduce((pre, curr) => pre + curr.origCount, 0))
-            return modDataArr[key].name
-        }
-
         /** 取得結果的角度 */
-        const getResultAngle = (itemName)=>{
-            const totalCount = modDataArr.reduce((pre, curr) => pre + curr.origCount, 0)
+        const getResultAngle = (name)=>{
+            const totalCount = dataArr.reduce((pre, curr) => pre + curr.origCount, 0)
 
-            const reverse = modDataArr.slice().reverse()
-                , reverseIndex = reverse.findIndex(obj => obj.item === itemName)
+            const reverse = dataArr.slice().reverse()
+                , reverseIndex = reverse.findIndex(obj => obj.name === name)
                 , preCount = reverse.slice(0, reverseIndex).reduce((pre, curr) => pre + curr.origCount, 0)
 
-            const bottom = preCount / totalCount * 360, top = (preCount + modDataArr.find(obj => obj.name === itemName).origCount) / totalCount * 360
+            const bottom = preCount / totalCount * 360, top = (preCount + dataArr.find(obj => obj.name === name).origCount) / totalCount * 360
             return gsap.utils.random(bottom, top, 1) 
         }
         
         // 滾動的流程
         const rollingProcess = async ()=>{
+
+            if(rollingTimeline)
+                return
 
             //#region 設定監聽
             const wheel = wheelRef.current, arrow = arrowRef.current
@@ -162,39 +176,32 @@ const AppPIXI = props =>{
     
             wheel.on(boundEvent, ctx => {
                 currentIndex = ctx
-                console.log('on bound', ctx)
+                currentIndex > -1 && setShowResult(dataArr[currentIndex].name)      // 顯示結果文字
                 arrowTween.isActive() && arrowTween.kill()
                 arrowTween.totalProgress(0).play()
             })
             //#endregion 設定監聽
 
             await startRolling()
+            wheel.off(boundEvent)
+
+            setIsRolling(false)             // 讓開始按鈕可以按
+            setRollingTimeline(null)        // 讓他可以返回上一頁
         }
 
         rollingProcess()
 
-    }, [isRolling, setIsRolling])
-
-    const [modDataArr] = useState(dataArr.map(data => ({...data, origCount: data.count})))
+    }, [isRolling, setIsRolling, dataArr, setDataArr, title, rollingTimeline, setRollingTimeline])
 
     return (
         <Stage {...appConfig}>
-            <Graphics interactive={true} buttonMode={true} pointerdown={()=> console.log('pt down')} draw={gp =>{
-                gp.beginFill(0xFF0000)
-                .drawRect(0, 0, 100, 100)
-                .endFill()
-            }}></Graphics>
-            <Graphics interactive={true} buttonMode={true} pointerdown={()=> console.log('pt down')} draw={gp =>{
-                gp.beginFill(0xFF0000)
-                .drawRect(500, 500, 100, 100)
-                .endFill()
-            }}></Graphics>
-
             <Container position={[0, 300]}>
                 <Wheel ref={wheelRef} dataArr={dataArr} />
                 <Arrow ref={arrowRef} />
+                <Text ref={textRef} position={[360, 0]} anchor={[-.2, .5]} text={showResult} style={{
+                    fontSize: 48
+                }} />
             </Container>
-
         </Stage>
     )
 }

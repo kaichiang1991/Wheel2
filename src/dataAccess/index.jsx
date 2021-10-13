@@ -39,9 +39,12 @@ export const useSetServerData = (title, dataArr) => {
 }
 
 export const fetchGameResult = async (title) => {
-    console.log('fetch: dataArr')
-    const result = await fetchData(`/wheel/${title}/result`)
-    console.log('result', result)
+    const data= (await fetchData(`/wheel/${title}/result`)).data
+    return JSON.parse(data).result
+}
+
+export const updateResult = async (title, name) => {
+    await fetchData(`/wheel/${title}/${name}`, 'PATCH')
 }
 
 /**
@@ -61,7 +64,6 @@ export async function fetchData(url, method = 'GET', data){
         console.log('requset data', url, method, data, e)
     }
     finally{
-        console.log('finally', res)
         return res
     }
 }

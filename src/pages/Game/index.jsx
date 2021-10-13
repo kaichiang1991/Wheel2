@@ -7,6 +7,7 @@ import {
 } from './index.style'
 import {
     dataArrState,
+    rollingTimelineState,
     titleState
 } from '../../Recoil'
 import { useHistory } from 'react-router'
@@ -29,7 +30,6 @@ const Game = () => {
 
     const history = useHistory()
     useEffect(()=>{
-        console.log('use effect check back')
         // 避免重新整理後沒資料，回到上一頁
         if(!title || !dataArr.length){
             history.goBack()
@@ -41,11 +41,18 @@ const Game = () => {
     //#region 抽獎開始
     const [isRolling, setIsRolling] = useState(false)
     const handleClick = () => {
+        // 檢查還有沒有獎項
+        if(!dataArr.find(data => data.count > 0)){
+            alert('沒有獎項了')
+            return
+        }
+
         if(!isRolling)
             setIsRolling(!isRolling)
     }       
     //#endregion 抽獎開始
 
+    const rollingTimeline = useRecoilValue(rollingTimelineState)
     return (
         <StyledGameWrapper>
             <div className="middle">
@@ -64,7 +71,11 @@ const Game = () => {
             <div className="ui-container">
                 <StyledGameButton className="start" children={'抽獎'} onClick={handleClick}/>
                 <div className="export">
-                    <StyledGameButton children="回上一頁" onClick={()=> history.goBack()}/>
+                    <StyledGameButton children="回上一頁" onClick={()=> {
+                        if(!rollingTimeline){       // 判斷沒有在轉動才回上一頁
+                            history.goBack()
+                        }
+                    }}/>
                     <StyledGameButton children="導出至excel"/>
                 </div>
             </div>

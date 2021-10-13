@@ -72,9 +72,9 @@ const App = ()=>{
 
     let index
     if((index = dataArr.findIndex(obj => obj.name === name)) > -1){           // 重複的品名，直接改變數量
-      setDataArr(dataArr.map((data, dataIdx) => dataIdx === index? {name, count}: data))
+      setDataArr(dataArr.map((data, dataIdx) => dataIdx === index? {name, count, origCount: count}: data))
     }else{
-      setDataArr([...dataArr, {name, count}])                         // 新的品項，新增
+      setDataArr([...dataArr, {name, count, origCount: count}])                         // 新的品項，新增
     }
   }
   //#endregion 手動輸入
@@ -112,7 +112,6 @@ const App = ()=>{
   useSetServerData(title, sendDataArr)
 
   useEffect(() => {
-    console.log('use Efx', startGame, dataArr)
     if(!startGame)
       return
     

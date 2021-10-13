@@ -3,7 +3,7 @@ import { SORT_STATE as SORT_STAT } from "../contant";
 
 export const titleState = atom({
     key: 'title',
-    default: 'aaa'  // ToDo 測試
+    default: 'AAA'  // ToDo 測試
 })
 
 export const dataArrState = atom({
@@ -34,4 +34,9 @@ export const sortedDataArr = selector({
                 return arr.slice().sort((a, b) => a.count - b.count)
         }
     }
+})
+
+export const rollingTimelineState = atom({
+    key: 'rollingTimeline',
+    default: null
 })

@@ -10,7 +10,7 @@ export const StyledGameWrapper = styled.div`
 
     .canvas-container{
         float: left;
-        width: 40%;
+        width: 70%;
         height: 100%;
         border: solid 1px black;
     }
